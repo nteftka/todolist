@@ -23,7 +23,9 @@ use App\Http\Controllers\HomeController;
 
 
 Route::group(['middleware' => 'auth'], function(){
-  Route::get('/user', [UserController::class, 'index']);
+  Route::get('/', [HomeController::class, 'index'])->name('home');
+  
+  // Route::get('/user', [UserController::class, 'index']);
 
 Route::get('/folders/{id}/tasks', [TaskController::class, 'index'])->name('tasks.index');
 Route::get('/folders/create', [FolderController::class, 'showCreateForm'])->name('folders.create');
@@ -44,4 +46,3 @@ Route::post('/folders/{id}/tasks/{task_id}/edit', [TaskController::class, 'edit'
 Auth::routes();
 
 // Route::get('/home', 'HomeController@index')->name('home');
-Route::get('/', [HomeController::class, 'index'])->name('home');
