@@ -21,28 +21,24 @@ use App\Http\Controllers\HomeController;
 //     return view('welcome');
 // });
 
-
-Route::group(['middleware' => 'auth'], function(){
+Route::group(['middleware' => 'auth'], function() {
   Route::get('/', [HomeController::class, 'index'])->name('home');
-  
-  // Route::get('/user', [UserController::class, 'index']);
 
-Route::get('/folders/{id}/tasks', [TaskController::class, 'index'])->name('tasks.index');
-Route::get('/folders/create', [FolderController::class, 'showCreateForm'])->name('folders.create');
-Route::post('/folders/create', [FolderController::class, 'create']);
+  Route::get('/folders/create', [FolderController::class, 'showCreateForm'])->name('folders.create');
+  Route::post('/folders/create', [FolderController::class, 'create']);
 
-// タスク作成機能
-Route::get('/folders/{id}/tasks/create', [TaskController::class, 'showCreateForm'])->name('tasks.create');
-Route::post('/folders/{id}/tasks/create', [TaskController::class, 'create']);
+  Route::group(['middleware' => 'can:view,folder'], function() {
+    Route::get('/folders/{folder}/tasks', [TaskController::class, 'index'])->name('tasks.index');
 
-// タスクの編集機能
-Route::get('/folders/{id}/tasks/{task_id}/edit', [TaskController::class, 'showEditForm'])->name('tasks.edit');
-Route::post('/folders/{id}/tasks/{task_id}/edit', [TaskController::class, 'edit']);
+    // タスク作成機能
+    Route::get('/folders/{folder}/tasks/create', [TaskController::class, 'showCreateForm'])->name('tasks.create');
+    Route::post('/folders/{folder}/tasks/create', [TaskController::class, 'create']);
 
+    // タスクの編集機能
+    Route::get('/folders/{folder}/tasks/{task}/edit', [TaskController::class, 'showEditForm'])->name('tasks.edit');
+    Route::post('/folders/{folder}/tasks/{task}/edit', [TaskController::class, 'edit']);
+      });
 });
 
-// トップページ
-// Route::get('/', [HomeController::class, 'index'])->name('home');
 Auth::routes();
 
-// Route::get('/home', 'HomeController@index')->name('home');
