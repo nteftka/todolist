@@ -1,83 +1,78 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Auth;
 
-use Illuminate\Http\Request;
-use App\Models\Folder;
-use App\Models\Task;
-use App\Http\Requests\CreateTask;
-use App\Http\Requests\EditTask;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Controller;
+use App\Providers\RouteServiceProvider;
+use App\Models\User;
+use Illuminate\Foundation\Auth\RegistersUsers;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
-
-class TaskController extends Controller
+class RegisterController extends Controller
 {
-    public function index(Folder $folder)
+    /*
+    |--------------------------------------------------------------------------
+    | Register Controller
+    |--------------------------------------------------------------------------
+    |
+    | This controller handles the registration of new users as well as their
+    | validation and creation. By default this controller uses a trait to
+    | provide this functionality without requiring any additional code.
+    |
+    */
+
+    use RegistersUsers;
+
+    /**
+     * Where to redirect users after registration.
+     *
+     * @var string
+     */
+    // protected $redirectTo = RouteServiceProvider::HOME;
+    protected $redirectTo = '/';
+
+    /**
+     * Create a new controller instance.
+     *
+     * @return void
+     */
+    public function __construct()
     {
-        // ユーザーのフォルダを取得する
-        $folders = Auth::user()->folders()->get();
+        $this->middleware('guest');
+    }
 
-        // 選ばれたフォルダを取得する
-        $tasks = $folder->tasks()->get();
-
-        return view('tasks/index', [
-            'folders' => $folders,
-            'current_folder_id' => $folder ->id,
-            'tasks' => $tasks,
+    /**
+     * Get a validator for an incoming registration request.
+     *
+     * @param  array  $data
+     * @return \Illuminate\Contracts\Validation\Validator
+     */
+    protected function validator(array $data)
+    {
+        return Validator::make($data, [
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ], [], [
+            'name' => 'ユーザー名',
+            'email' => 'メールアドレス',
+            'password' => 'パスワード',
         ]);
     }
 
-    public function showCreateForm(Folder $folder)
+    /**
+     * Create a new user instance after a valid registration.
+     *
+     * @param  array  $data
+     * @return \App\User
+     */
+    protected function create(array $data)
     {
-        return view('tasks/create', [
-            'folder_id' => $folder->id,
+        return User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
         ]);
-    }
-
-    public function create(Folder $folder, CreateTask $request)
-    {
-        $task = new Task();
-        $task->title = $request->title;
-        $task->due_date = $request->due_date;
-
-        $folder->tasks()->save($task);
-
-        return redirect()->route('tasks.index', [
-            'folder' => $folder->id,
-        ]);
-    }
-
-    public function showEditForm(Folder $folder, Task $task)
-    {
-
-        $this->checkRelation($folder, $task);
-
-        return view('tasks/edit', [
-            'task' => $task,
-        ]);
-    }
-
-    public function edit(Folder $folder, Task $task, EditTask $request)
-    {
-        
-        $this->checkRelation($folder, $task);
-        
-        $task->title = $request->title;
-        $task->status = $request->status;
-        $task->due_date = $request->due_date;
-        $task->save();
-
-        
-        return redirect()->route('tasks.index', [
-            'folder' => $task->folder_id,
-            'task' => $task->id,
-        ]);
-    }
-
-    private function checkRelation(Folder $folder, Task $task)
-    {
-        if ($folder->id !== $task->folder_id) {
-            abort(404);
-        }
     }
 }
